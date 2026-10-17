@@ -16,6 +16,19 @@ const els = {
   teamCustom: $("team-custom"),
   summary: $("summary"),
   teamList: $("team-list"),
+  drawSummary: $("draw-summary"),
+  drawControls: $("draw-controls"),
+  hideResult: $("hide-result"),
+  drawTime: $("draw-time"),
+  generate: $("generate"),
+  result: $("result"),
+  revealControls: $("reveal-controls"),
+  revealNext: $("reveal-next"),
+  revealAll: $("reveal-all"),
+  shareControls: $("share-controls"),
+  copyLink: $("copy-link"),
+  copyText: $("copy-text"),
+  startOver: $("start-over"),
   error: $("error"),
   back: $("back"),
   next: $("next"),
@@ -48,6 +61,10 @@ const league = { name: "", nameSuggested: false, teamCount: DEFAULT_TEAMS, teams
 let step = 1;
 let rolledName = null; // last name put in the box by the dice button
 const teamRows = new Map(); // team id -> <li>, reused so focus and drag survive reordering
+// Last generated order: order[i] is the team picking at slot i+1. `hidden` holds the slots not yet
+// revealed, ascending; they are revealed from the last pick to the first. `at` is when it was drawn.
+let draw = null;
+let sharedView = false; // showing a result opened from a shared link
 
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -209,6 +226,122 @@ function renderTeams() {
   });
 }
 
+// Unbiased random integer in [0, n), from the browser's cryptographic RNG.
+function randomInt(n) {
+  const limit = Math.floor(2 ** 32 / n) * n;
+  const buf = new Uint32Array(1);
+  do crypto.getRandomValues(buf);
+  while (buf[0] >= limit);
+  return buf[0] % n;
+}
+
+// Fisher-Yates shuffle of the unlocked teams across the unlocked slots; locked teams keep theirs.
+function drawOrder() {
+  const order = [...league.teams];
+  const slots = order.flatMap((t, i) => (t.locked ? [] : [i]));
+  for (let k = slots.length - 1; k > 0; k--) {
+    const j = randomInt(k + 1);
+    [order[slots[k]], order[slots[j]]] = [order[slots[j]], order[slots[k]]];
+  }
+  return order;
+}
+
+function formatTime(at) {
+  return new Date(at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "long" });
+}
+
+function renderDraw(justRevealed = []) {
+  const teams = draw?.order ?? league.teams;
+  const locked = teams.filter((t) => t.locked).length;
+  els.drawSummary.textContent =
+    `${draw?.leagueName ?? league.name} · ${teams.length} teams` + (locked ? ` · ${locked} locked` : "");
+  els.drawControls.hidden = sharedView;
+  els.startOver.hidden = !sharedView;
+  els.generate.textContent = draw ? "Generate again" : "Generate draft order";
+  els.drawTime.hidden = !draw;
+  els.result.hidden = !draw;
+  // Copying is only offered once everything is revealed, so it can't spoil a reveal.
+  els.revealControls.hidden = !draw || draw.hidden.length === 0;
+  els.shareControls.hidden = !draw || draw.hidden.length > 0;
+  if (!draw) return;
+
+  els.drawTime.textContent = `Generated ${formatTime(draw.at)}`;
+  els.result.replaceChildren(
+    ...draw.order.map((team, i) => {
+      const hidden = draw.hidden.includes(i);
+      const item = document.createElement("li");
+      item.className = "pick";
+      item.classList.toggle("locked", team.locked);
+      item.classList.toggle("hidden", hidden);
+      item.classList.toggle("revealed", justRevealed.includes(i));
+      const slot = document.createElement("span");
+      slot.className = "slot";
+      slot.textContent = i + 1;
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = hidden ? "???" : teamLabel(team) + (team.locked ? " 🔒" : "");
+      item.append(slot, name);
+      return item;
+    })
+  );
+  if (draw.hidden.length) els.revealNext.textContent = `Reveal pick ${draw.hidden.at(-1) + 1}`;
+  els.result.querySelector(".revealed")?.scrollIntoView({ block: "nearest" });
+}
+
+function resultText() {
+  const lines = draw.order.map((t, i) => `${i + 1}. ${teamLabel(t)}${t.locked ? " (locked)" : ""}`);
+  return `${draw.leagueName} draft order\nGenerated ${formatTime(draw.at)}\n\n${lines.join("\n")}\n`;
+}
+
+// The result travels in the URL hash as base64url JSON, so sharing needs no server.
+function resultLink() {
+  const json = JSON.stringify({
+    name: draw.leagueName,
+    at: draw.at,
+    picks: draw.order.map((t) => [teamLabel(t), t.locked ? 1 : 0]),
+  });
+  const bytes = new TextEncoder().encode(json);
+  const code = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `${location.origin}${location.pathname}#r=${code}`;
+}
+
+// A shared link (#r=...) opens straight to its result, fully revealed and read-only.
+function readSharedResult() {
+  const code = new URLSearchParams(location.hash.slice(1)).get("r");
+  if (!code) return null;
+  try {
+    const bytes = Uint8Array.from(atob(code.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const valid =
+      typeof data.name === "string" &&
+      Number.isFinite(data.at) &&
+      Array.isArray(data.picks) &&
+      data.picks.length >= MIN_TEAMS &&
+      data.picks.length <= MAX_TEAMS &&
+      data.picks.every((p) => Array.isArray(p) && typeof p[0] === "string");
+    if (!valid) return null;
+    return {
+      leagueName: data.name.slice(0, 60),
+      at: data.at,
+      hidden: [],
+      order: data.picks.map(([name, locked], i) => ({ id: i + 1, name: name.slice(0, 40), locked: !!locked })),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function copy(button, text) {
+  button.dataset.label ??= button.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    button.textContent = "Copied!";
+  } catch {
+    button.textContent = "Copy failed";
+  }
+  setTimeout(() => (button.textContent = button.dataset.label), 1500);
+}
+
 // Each step validates its inputs and copies them into `league`.
 // Returns an error message and the offending input, or null when valid.
 const validators = {
@@ -301,13 +434,17 @@ function render() {
     section.hidden = Number(section.dataset.step) !== step;
   });
   renderProgress();
-  els.back.hidden = step === 1;
+  els.progress.hidden = sharedView;
+  els.back.hidden = step === 1 || sharedView;
   els.next.hidden = step === total;
 
   if (step === 2) {
     els.summary.textContent = `${league.name} · ${league.teamCount} teams`;
     renderTeams();
   }
+  // Leaving the draw step discards the result, since the teams may change.
+  if (step === 3) renderDraw();
+  else draw = null;
 
   const first = els.steps[step - 1].querySelector("input");
   if (first) first.focus();
@@ -357,6 +494,30 @@ els.teamPresets.forEach((r) =>
   })
 );
 
+// Locked teams are never hidden: their slot is already known.
+els.generate.addEventListener("click", () => {
+  const order = drawOrder();
+  const hidden = els.hideResult.checked ? order.flatMap((t, i) => (t.locked ? [] : [i])) : [];
+  draw = { order, hidden, leagueName: league.name, at: Date.now() };
+  renderDraw(hidden.length ? [] : order.map((_, i) => i));
+  if (hidden.length) els.revealNext.focus();
+});
+els.revealNext.addEventListener("click", () => {
+  const slot = draw.hidden.pop();
+  renderDraw([slot]);
+  if (draw.hidden.length) els.revealNext.focus();
+  else els.generate.focus();
+});
+els.revealAll.addEventListener("click", () => {
+  const slots = draw.hidden;
+  draw.hidden = [];
+  renderDraw(slots);
+  els.generate.focus();
+});
+
+els.copyLink.addEventListener("click", () => copy(els.copyLink, resultLink()));
+els.copyText.addEventListener("click", () => copy(els.copyText, resultText()));
+
 els.back.addEventListener("click", () => {
   clearError();
   if (step > 1) {
@@ -368,4 +529,11 @@ els.back.addEventListener("click", () => {
 els.leagueName.placeholder = randomLeagueName();
 
 load();
+draw = readSharedResult();
+if (draw) {
+  sharedView = true;
+  step = 3;
+}
 render();
+// Pasting another shared link into this tab only changes the hash; reload to show it.
+window.addEventListener("hashchange", () => location.reload());

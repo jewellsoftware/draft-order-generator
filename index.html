@@ -51,7 +51,25 @@
 
       <section class="step" data-step="3" data-title="Draw" hidden>
         <h2>Draw</h2>
-        <p class="hint">Coming soon.</p>
+        <p id="draw-summary" class="hint"></p>
+        <div id="draw-controls">
+          <label class="check">
+            <input id="hide-result" type="checkbox" checked>
+            Hide the result and reveal it one pick at a time
+          </label>
+          <button id="generate" type="button" class="primary generate">Generate draft order</button>
+        </div>
+        <p id="draw-time" class="hint draw-time" hidden></p>
+        <ol id="result" class="result" hidden></ol>
+        <div id="reveal-controls" class="button-row" hidden>
+          <button id="reveal-next" type="button" class="primary">Reveal next</button>
+          <button id="reveal-all" type="button">Reveal all</button>
+        </div>
+        <div id="share-controls" class="button-row" hidden>
+          <button id="copy-link" type="button">Copy link</button>
+          <button id="copy-text" type="button">Copy as text</button>
+        </div>
+        <p id="start-over" hidden><a href="./">Make your own draft order</a></p>
       </section>
 
       <p id="error" class="error" role="alert"></p>

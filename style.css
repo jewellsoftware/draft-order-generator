@@ -216,7 +216,7 @@ button[hidden] { display: inline-block; visibility: hidden; }
   border-color: var(--accent);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
 }
-.team .slot {
+.slot {
   width: 1.8em;
   text-align: right;
   font-weight: 600;
@@ -242,3 +242,52 @@ button[hidden] { display: inline-block; visibility: hidden; }
 .lock[aria-pressed="true"] { opacity: 1; }
 body.drag-active { cursor: grabbing; user-select: none; }
 body.drag-active .drag-handle { cursor: grabbing; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  margin: 0 0 16px;
+}
+.check input { display: inline-block; width: auto; margin: 0; }
+
+.generate { width: 100%; padding: 12px; font-size: 1.1rem; }
+
+.result {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-weight: 600;
+}
+.pick.locked { background: var(--bg); }
+.pick.hidden .name { color: var(--muted); letter-spacing: 0.2em; }
+.pick.revealed {
+  border-color: var(--accent);
+  animation: reveal 0.4s ease-out;
+}
+@keyframes reveal {
+  from { opacity: 0.2; transform: scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pick.revealed { animation: none; }
+}
+
+.draw-time { margin-top: 16px; }
+.draw-time + .result { margin-top: 8px; }
+
+.button-row { display: flex; gap: 8px; margin-top: 12px; }
+.button-row button { flex: 1; }
+
+/* These set display, which would otherwise override the hidden attribute. */
+.progress[hidden], .result[hidden], .button-row[hidden] { display: none; }
