@@ -17,8 +17,3 @@ Open `index.html` directly, or serve the folder:
 ```sh
 python -m http.server 8000
 ```
-
-## Deploy to GitHub Pages
-
-In the repo on GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, branch
-`main`, folder `/ (root)`. The site will be at `https://jewellsoftware.github.io/draft-order-generator/`.
