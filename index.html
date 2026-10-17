@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Random Draft Order Generator</title>
+  <meta name="description" content="Randomize a fair draft order for your league.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Random Draft Order Generator</h1>
+  </header>
+
+  <main>
+    <form id="wizard" class="card" novalidate autocomplete="off">
+      <p id="progress" class="progress"></p>
+
+      <section class="step" data-step="1">
+        <h2>Your league</h2>
+        <label for="league-name">League name</label>
+        <div class="input-row">
+          <input id="league-name" type="text" maxlength="60" autocomplete="off">
+          <button id="reroll-name" type="button" class="icon-button" title="Suggest a name" aria-label="Suggest a random league name">🎲</button>
+        </div>
+        <p class="hint">Leave blank to use the suggested name, or roll for a new one.</p>
+
+        <fieldset id="team-count">
+          <legend>Number of teams</legend>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="team-preset" value="4"><span>4</span></label>
+            <label class="chip"><input type="radio" name="team-preset" value="6"><span>6</span></label>
+            <label class="chip"><input type="radio" name="team-preset" value="8"><span>8</span></label>
+            <label class="chip"><input type="radio" name="team-preset" value="10"><span>10</span></label>
+            <label class="chip"><input type="radio" name="team-preset" value="12" checked><span>12</span></label>
+            <label class="chip"><input type="radio" name="team-preset" value="14"><span>14</span></label>
+            <label class="chip"><input type="radio" name="team-preset" value="16"><span>16</span></label>
+            <input id="team-custom" class="custom-count" type="number" min="2" max="32" step="1"
+                   placeholder="Other" autocomplete="off" aria-label="Other number of teams (2–32)">
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="step" data-step="2" hidden>
+        <h2>Step 2</h2>
+        <p id="summary" class="hint"></p>
+        <p class="hint">Coming soon.</p>
+      </section>
+
+      <p id="error" class="error" role="alert"></p>
+
+      <div class="nav">
+        <button id="back" type="button">Back</button>
+        <button id="next" type="submit" class="primary">Next</button>
+      </div>
+    </form>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
