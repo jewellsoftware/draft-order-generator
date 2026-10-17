@@ -14,9 +14,9 @@
 
   <main>
     <form id="wizard" class="card" novalidate autocomplete="off">
-      <p id="progress" class="progress"></p>
+      <ol id="progress" class="progress" aria-label="Progress"></ol>
 
-      <section class="step" data-step="1">
+      <section class="step" data-step="1" data-title="League">
         <h2>Your league</h2>
         <label for="league-name">League name</label>
         <div class="input-row">
@@ -41,9 +41,16 @@
         </fieldset>
       </section>
 
-      <section class="step" data-step="2" hidden>
-        <h2>Step 2</h2>
+      <section class="step" data-step="2" data-title="Teams" hidden>
+        <h2>Teams</h2>
         <p id="summary" class="hint"></p>
+        <ol id="team-list" class="team-list"></ol>
+        <p class="hint">Drag ⠿ to reorder, or focus it and use the arrow keys. Lock 🔒 a team to keep it
+          in that spot; locked teams are left out of the random draw.</p>
+      </section>
+
+      <section class="step" data-step="3" data-title="Draw" hidden>
+        <h2>Draw</h2>
         <p class="hint">Coming soon.</p>
       </section>
 

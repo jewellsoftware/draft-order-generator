@@ -51,14 +51,35 @@ h2 { margin: 0 0 16px; font-size: 1.3rem; }
   margin: 20px 0;
 }
 
+/* One segment per step; filled up to and including the current step. */
 .progress {
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 8px;
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
 }
+.progress li {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress li::before {
+  content: "";
+  display: block;
+  height: 6px;
+  margin-bottom: 4px;
+  border-radius: 3px;
+  background: var(--border);
+}
+.progress li.done::before,
+.progress li.current::before { background: var(--accent); }
+.progress li.current { color: var(--text); }
 
 label, legend { display: block; font-weight: 600; }
 
@@ -173,3 +194,51 @@ button.primary {
   color: var(--accent-text);
 }
 button[hidden] { display: inline-block; visibility: hidden; }
+
+.team-list {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+.team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.team.locked { background: var(--bg); }
+.team.dragging {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+}
+.team .slot {
+  width: 1.8em;
+  text-align: right;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.team input { flex: 1; min-width: 0; margin-top: 0; padding: 6px 8px; }
+.drag-handle, .lock {
+  padding: 4px 8px;
+  border-color: transparent;
+  background: none;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.drag-handle {
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+.drag-handle:disabled { cursor: default; opacity: 0.3; }
+.drag-handle:disabled:hover { border-color: transparent; }
+.lock { opacity: 0.45; }
+.lock[aria-pressed="true"] { opacity: 1; }
+body.drag-active { cursor: grabbing; user-select: none; }
+body.drag-active .drag-handle { cursor: grabbing; }
