@@ -271,16 +271,32 @@ body.drag-active .drag-handle { cursor: grabbing; }
   font-weight: 600;
 }
 .pick.locked { background: var(--bg); }
-.pick.hidden .name { color: var(--muted); letter-spacing: 0.2em; }
-.pick.revealed {
-  border-color: var(--accent);
-  animation: reveal 0.4s ease-out;
+.pick.hidden { border-style: dashed; }
+/* Every bar is the same width, so the real name's length gives nothing away. */
+.pick.hidden .name {
+  width: 60%;
+  height: 1.1em;
+  overflow: hidden;
+  color: transparent;
+  user-select: none;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--border) 0 6px,
+    color-mix(in srgb, var(--border) 45%, transparent) 6px 12px
+  );
+}
+.pick.next { border: 1px solid var(--accent); }
+.pick.revealed { border-color: var(--accent); }
+.pick.revealed .name {
+  display: inline-block;
+  animation: reveal 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2);
 }
 @keyframes reveal {
-  from { opacity: 0.2; transform: scale(0.96); }
+  from { opacity: 0; transform: perspective(400px) rotateX(-90deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pick.revealed { animation: none; }
+  .pick.revealed .name { animation: none; }
 }
 
 .draw-time { margin-top: 16px; }

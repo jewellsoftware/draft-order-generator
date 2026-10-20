@@ -273,13 +273,15 @@ function renderDraw(justRevealed = []) {
       item.className = "pick";
       item.classList.toggle("locked", team.locked);
       item.classList.toggle("hidden", hidden);
+      item.classList.toggle("next", i === draw.hidden.at(-1));
       item.classList.toggle("revealed", justRevealed.includes(i));
       const slot = document.createElement("span");
       slot.className = "slot";
       slot.textContent = i + 1;
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = hidden ? "???" : teamLabel(team) + (team.locked ? " 🔒" : "");
+      // Hidden names are drawn as a covered bar; the text stays for screen readers.
+      name.textContent = hidden ? "Hidden" : teamLabel(team) + (team.locked ? " 🔒" : "");
       item.append(slot, name);
       return item;
     })
